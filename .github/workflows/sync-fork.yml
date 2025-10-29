@@ -1,0 +1,52 @@
+name: Sync Fork with Upstream
+
+on:
+  schedule:
+    # Run every hour
+    - cron: '0 * * * *'
+  workflow_dispatch:
+    # Allow manual trigger
+
+jobs:
+  sync:
+    name: Sync main branch with upstream
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ secrets.GH_PAT }}
+          fetch-depth: 0
+      
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      
+      - name: Add upstream remote
+        run: |
+          if ! git remote get-url upstream >/dev/null 2>&1; then
+            git remote add upstream https://github.com/ggchest/Sellers-API.git
+          fi
+          git remote -v
+      
+      - name: Fetch upstream changes
+        run: git fetch upstream
+      
+      - name: Merge upstream changes
+        run: |
+          if git merge upstream/main --allow-unrelated-histories; then
+            echo "Successfully merged upstream changes"
+          else
+            echo "Merge conflict detected. Manual intervention required."
+            exit 1
+          fi
+      
+      - name: Push changes
+        run: git push origin main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}
