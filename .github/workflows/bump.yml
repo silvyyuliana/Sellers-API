@@ -1,0 +1,45 @@
+name: Bump.sh API Documentation
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+
+jobs:
+  deploy-doc:
+    name: Deploy API documentation to Bump.sh
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Deploy API documentation
+        uses: bump-sh/github-action@v1
+        with:
+          doc: doc/api-documentation.yml
+          token: ${{ secrets.BUMP_TOKEN }}
+  
+  api-diff:
+    name: Check API diff on Pull Request
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Comment API diff
+        uses: bump-sh/github-action@v1
+        with:
+          doc: doc/api-documentation.yml
+          token: ${{ secrets.BUMP_TOKEN }}
+          command: diff
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
