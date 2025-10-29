@@ -27,7 +27,9 @@ jobs:
       
       - name: Add upstream remote
         run: |
-          git remote add upstream https://github.com/ggchest/Sellers-API.git || true
+          if ! git remote get-url upstream >/dev/null 2>&1; then
+            git remote add upstream https://github.com/ggchest/Sellers-API.git
+          fi
           git remote -v
       
       - name: Fetch upstream changes
@@ -35,7 +37,12 @@ jobs:
       
       - name: Merge upstream changes
         run: |
-          git merge upstream/main --allow-unrelated-histories || echo "No changes to merge or merge conflict"
+          if git merge upstream/main --allow-unrelated-histories; then
+            echo "Successfully merged upstream changes"
+          else
+            echo "Merge conflict detected. Manual intervention required."
+            exit 1
+          fi
       
       - name: Push changes
         run: git push origin main
